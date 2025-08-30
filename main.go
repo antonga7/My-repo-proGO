@@ -1,20 +1,31 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+	"math/big"
 	"strconv"
 	"strings"
 )
 
-func fibonacci(n int) int {
-	if n <= 1 && n >= 0 {
-		return n
+func fibonacci(n int) (*big.Int, error) {
+	if n < 0 {
+		return nil, errors.New("нельзя вычислить число Фибоначчи для отрицательного числа")
 	}
-	a, b := 0, 1
+
+	if n == 0 {
+		return big.NewInt(0), nil
+	}
+
+	if n == 1 {
+		return big.NewInt(1), nil
+	}
+	a, b := big.NewInt(0), big.NewInt(1)
 	for i := 2; i <= n; i++ {
-		a, b = b, a+b
+		sum := new(big.Int).Add(a, b)
+		a, b = b, sum
 	}
-	return b
+	return b, nil
 }
 
 func main() {
@@ -38,8 +49,11 @@ func main() {
 			fmt.Println("Ошибка: число должно быть 0 или больше.")
 			continue
 		}
-
-		fmt.Printf("Число Фибоначчи, соотвествующее введенному номеру: %d.\n", fibonacci(num))
+		result, err := fibonacci(num)
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Print("Число Фибоначчи, соотвествующее введенному номеру: ", result)
 		break
 	}
 }
