@@ -1,12 +1,18 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
-	"fmt"
+	"log"
 	"math/big"
+	"net/http"
 	"strconv"
-	"strings"
 )
+
+type Response struct {
+	N   int      `json:"n"`
+	Fib *big.Int `json:"fib"`
+}
 
 func fibonacci(n int) (*big.Int, error) {
 	if n < 0 {
@@ -28,32 +34,45 @@ func fibonacci(n int) (*big.Int, error) {
 	return b, nil
 }
 
-func main() {
-	var input string
+func writeJSONError(w http.ResponseWriter, msg string, code int) {
+	log.Printf("Ошибка [%d]: %s", code, msg)
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(code)
+	json.NewEncoder(w).Encode(map[string]string{"error": msg})
+}
 
-	for {
-		fmt.Print("Введите целое число (0 или больше): ")
-		fmt.Scanln(&input)
-
-		// Убираем пробелы
-		input = strings.TrimSpace(input)
-
-		// Пробуем преобразовать в int
-		num, err := strconv.Atoi(input)
-		if err != nil {
-			fmt.Println("Ошибка: введите целое число без дробной части.")
-			continue
-		}
-
-		if num < 0 {
-			fmt.Println("Ошибка: число должно быть 0 или больше.")
-			continue
-		}
-		result, err := fibonacci(num)
-		if err != nil {
-			fmt.Println(err)
-		}
-		fmt.Print("Число Фибоначчи, соотвествующее введенному номеру: ", result)
-		break
+func fibHandler(w http.ResponseWriter, r *http.Request) {
+	log.Printf("Запрос: %s %s", r.Method, r.URL.String())
+	nStr := r.URL.Query().Get("n")
+	if nStr == "" {
+		writeJSONError(w, "параметр 'n' обязателен", http.StatusBadRequest)
+		return
 	}
+
+	n, err := strconv.Atoi(nStr)
+	if err != nil || n < 0 {
+		writeJSONError(w, "параметр 'n' должен быть целым числом >= 0", http.StatusBadRequest)
+		return
+	}
+
+	result, err := fibonacci(n)
+	if err != nil {
+		writeJSONError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	resp := Response{N: n, Fib: result}
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		log.Printf("Ошибка при кодировании ответа: %v", err)
+	}
+
+	log.Printf("Успешно: n=%d fib=%s", n, result.String())
+}
+
+func main() {
+	http.HandleFunc("/fib", fibHandler)
+	log.Println("Сервер запущен на хосте 8080")
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
