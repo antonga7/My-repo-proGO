@@ -1,4 +1,4 @@
-package main
+package fib
 
 import (
 	"testing"
@@ -26,7 +26,7 @@ func TestFibonacci(t *testing.T) {
 
 	for _, tc := range testCases {
 		// Вызываем нашу функцию с входными данными из тестового случая
-		result, err := fibonacci(tc.input)
+		result, err := Fibonacci(tc.input)
 		if err != nil {
 			if tc.input < 0 {
 				continue
