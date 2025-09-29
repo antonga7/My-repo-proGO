@@ -1,13 +1,13 @@
 package fib
 
 import (
-	"errors"
+	"fmt"
 	"math/big"
 )
 
 func Fibonacci(n int) (*big.Int, error) {
 	if n < 0 {
-		return nil, errors.New("нельзя вычислить число Фибоначчи для отрицательного числа")
+		return nil, fmt.Errorf("нельзя вычислить число Фибоначчи для отрицательного числа")
 	}
 
 	if n == 0 {

@@ -1,6 +1,7 @@
-package fib
+package fib_test
 
 import (
+	"proGO/internal/fib"
 	"testing"
 )
 
@@ -26,7 +27,7 @@ func TestFibonacci(t *testing.T) {
 
 	for _, tc := range testCases {
 		// Вызываем нашу функцию с входными данными из тестового случая
-		result, err := Fibonacci(tc.input)
+		result, err := fib.Fibonacci(tc.input)
 		if err != nil {
 			if tc.input < 0 {
 				continue
