@@ -1,4 +1,3 @@
-version: "3.8"
 
 services:
   postgres:
@@ -12,7 +11,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - /Users/antongalkin/Desktop/proGO/DB:/var/lib/postgresql/data
+      - ./DB:/var/lib/postgresql/data
 
 volumes:
   postgres_data:

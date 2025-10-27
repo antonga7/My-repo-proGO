@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -24,7 +25,7 @@ func (s *Store) Get(ctx context.Context, n int) (*big.Int, error) {
 	var valStr string
 	err := s.pool.QueryRow(ctx, "SELECT value FROM fibonacci WHERE n = $1", n).Scan(&valStr)
 	if err != nil {
-		if err == pgx.ErrNoRows {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("Ошибка при запросе: %w", err)
