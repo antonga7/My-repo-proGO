@@ -1,21 +1,28 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"math/big"
 	"net/http"
 	"proGO/internal/fib"
+	"proGO/internal/storage"
 	"strconv"
-	"sync"
 )
+
+type Handler struct {
+	store storage.Storer
+}
+
+func NewHandler(s storage.Storer) *Handler {
+	return &Handler{store: s}
+}
 
 type Response struct {
 	N   int      `json:"n"`
 	Fib *big.Int `json:"fib"`
 }
-
-var fibCache = sync.Map{}
 
 func WriteJSONError(w http.ResponseWriter, msg string, code int) {
 	log.Printf("Ошибка [%d]: %s", code, msg)
@@ -24,7 +31,7 @@ func WriteJSONError(w http.ResponseWriter, msg string, code int) {
 	json.NewEncoder(w).Encode(map[string]string{"error": msg})
 }
 
-func FibHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) FibHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Запрос: %s %s", r.Method, r.URL.String())
 	nStr := r.URL.Query().Get("n")
 	if nStr == "" {
@@ -38,14 +45,17 @@ func FibHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if val, ok := fibCache.Load(n); ok {
-		fib := val.(*big.Int)
-		resp := Response{N: n, Fib: fib}
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		if err := json.NewEncoder(w).Encode(resp); err != nil {
-			log.Printf("Ошибка при кодировании ответа: %v", err)
-		}
+	ctx := context.Background()
 
+	if val, err := h.store.Get(ctx, n); err != nil {
+		WriteJSONError(w, err.Error(), http.StatusInternalServerError)
+		return
+	} else if val != nil {
+		resp := Response{N: n, Fib: val}
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		json.NewEncoder(w).Encode(resp)
+		log.Printf("Извлечено из базы: n=%d, fib =%s", n, val.String())
+		return
 	}
 
 	result, err := fib.Fibonacci(n)
@@ -54,12 +64,15 @@ func FibHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fibCache.Store(n, result)
+	if err := h.store.Set(ctx, n, result); err != nil {
+		log.Printf("Не удалось сохранить в базу: %v", err)
+	}
+
 	resp := Response{N: n, Fib: result}
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(resp); err != nil {
 		log.Printf("Ошибка при кодировании ответа: %v", err)
 	}
-	log.Printf("Успешно и сохранено в кэш: n=%d fib=%s", n, result.String())
+	log.Printf("Успешно и сохранено в базу: n=%d fib=%s", n, result.String())
 }
