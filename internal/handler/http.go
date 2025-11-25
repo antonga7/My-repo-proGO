@@ -28,7 +28,10 @@ func WriteJSONError(w http.ResponseWriter, msg string, code int) {
 	log.Printf("Ошибка [%d]: %s", code, msg)
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(code)
-	json.NewEncoder(w).Encode(map[string]string{"error": msg})
+	if err := json.NewEncoder(w).Encode(map[string]string{"error": msg}); err != nil {
+		http.Error(w, "Не удалось закодировать ответ", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (h *Handler) FibHandler(w http.ResponseWriter, r *http.Request) {
@@ -53,7 +56,10 @@ func (h *Handler) FibHandler(w http.ResponseWriter, r *http.Request) {
 	} else if val != nil {
 		resp := Response{N: n, Fib: val}
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-		json.NewEncoder(w).Encode(resp)
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			http.Error(w,"Не удалось закодировать ответ", http.StatusInternalServerError)
+			return
+		}
 		log.Printf("Извлечено из базы: n=%d, fib =%s", n, val.String())
 		return
 	}

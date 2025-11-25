@@ -16,7 +16,7 @@ type Store struct {
 func New(connStr string) (*Store, error) {
 	pool, err := pgxpool.New(context.Background(), connStr)
 	if err != nil {
-		return nil, fmt.Errorf("Ошибка подключения к Postgres: %w", err)
+		return nil, fmt.Errorf("ошибка подключения к Postgres: %w", err)
 	}
 	return &Store{pool: pool}, nil
 }
@@ -28,7 +28,7 @@ func (s *Store) Get(ctx context.Context, n int) (*big.Int, error) {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("Ошибка при запросе: %w", err)
+		return nil, fmt.Errorf("ошибка при запросе: %w", err)
 	}
 
 	val := new(big.Int)
