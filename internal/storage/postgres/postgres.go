@@ -1,3 +1,4 @@
+// Package postgres предоставляет реализацию интерфейса storage.Storer для базы данных PostgreSQL.
 package postgres
 
 import (
@@ -9,10 +10,12 @@ import (
 	"math/big"
 )
 
+// Store реализует интерфейс Storer, используя базу данных PostgreSQL.
 type Store struct {
 	pool *pgxpool.Pool
 }
 
+// New создает новый экземпляр Store с указанной строкой подключения.
 func New(connStr string) (*Store, error) {
 	pool, err := pgxpool.New(context.Background(), connStr)
 	if err != nil {
@@ -21,6 +24,7 @@ func New(connStr string) (*Store, error) {
 	return &Store{pool: pool}, nil
 }
 
+// Get получает значение из БД
 func (s *Store) Get(ctx context.Context, n int) (*big.Int, error) {
 	var valStr string
 	err := s.pool.QueryRow(ctx, "SELECT value FROM fibonacci WHERE n = $1", n).Scan(&valStr)
@@ -36,6 +40,7 @@ func (s *Store) Get(ctx context.Context, n int) (*big.Int, error) {
 	return val, nil
 }
 
+// Set записывает значение в БД
 func (s *Store) Set(ctx context.Context, n int, val *big.Int) error {
 	_, err := s.pool.Exec(ctx, "INSERT INTO fibonacci(n, value) VALUES ($1, $2) ON CONFLICT (n) DO NOTHING", n, val.String())
 	if err != nil {

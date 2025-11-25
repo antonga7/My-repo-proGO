@@ -10,6 +10,8 @@ linters:
     - errcheck
     - unused
     - ineffassign
+    - gocritic
+    - revive
 
 issues:
   exclude-use-default: false

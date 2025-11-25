@@ -1,3 +1,4 @@
+// Package handler предоставляет функции для обработки HTTP-запросов.
 package handler
 
 import (
@@ -11,29 +12,34 @@ import (
 	"strconv"
 )
 
+// Handler обрабатывает HTTP-запросы и использует хранилище Storer
 type Handler struct {
 	store storage.Storer
 }
 
+// NewHandler создает новый экземпляр Handler
 func NewHandler(s storage.Storer) *Handler {
 	return &Handler{store: s}
 }
 
+// Response определяет стандартную структуру HTTP-ответа JSON
 type Response struct {
 	N   int      `json:"n"`
 	Fib *big.Int `json:"fib"`
 }
 
+// WriteJSONError отправляет клиенту JSON-ответ с указанным сообщением и HTTP-кодом.
 func WriteJSONError(w http.ResponseWriter, msg string, code int) {
 	log.Printf("Ошибка [%d]: %s", code, msg)
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(code)
 	if err := json.NewEncoder(w).Encode(map[string]string{"error": msg}); err != nil {
-		http.Error(w, "Не удалось закодировать ответ", http.StatusInternalServerError)
+		log.Printf("критическая ошибка при кодировании сообщения об ошибке: %v", err)
 		return
 	}
 }
 
+// FibHandler обрабатывает запросы на вычисление чисел Фибоначчи через HTTP
 func (h *Handler) FibHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Запрос: %s %s", r.Method, r.URL.String())
 	nStr := r.URL.Query().Get("n")
@@ -57,7 +63,7 @@ func (h *Handler) FibHandler(w http.ResponseWriter, r *http.Request) {
 		resp := Response{N: n, Fib: val}
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		if err := json.NewEncoder(w).Encode(resp); err != nil {
-			http.Error(w,"Не удалось закодировать ответ", http.StatusInternalServerError)
+			log.Printf("не удалось закодировать успешный ответ из кэша: %v", err)
 			return
 		}
 		log.Printf("Извлечено из базы: n=%d, fib =%s", n, val.String())

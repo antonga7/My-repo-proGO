@@ -9,18 +9,21 @@ import (
 	"testing"
 )
 
+// FakeStore реализует интерфейс Storer для целей тестирования
 type FakeStore struct {
 	data map[int]*big.Int
 }
 
-func (f *FakeStore) Get(ctx context.Context, n int) (*big.Int, error) {
+// Get - фиктивная реализация метода Get
+func (f *FakeStore) Get(_ context.Context, n int) (*big.Int, error) {
 	if val, ok := f.data[n]; ok {
 		return val, nil
 	}
 	return nil, nil
 }
 
-func (f *FakeStore) Set(ctx context.Context, n int, val *big.Int) error {
+// Get - фиктивная реализация метода Set
+func (f *FakeStore) Set(_ context.Context, n int, val *big.Int) error {
 	f.data[n] = val
 	return nil
 }
