@@ -1,3 +1,4 @@
+// Package fib предоставляет функции для вычисления чисел Фибоначчи.
 package fib
 
 import (
@@ -5,6 +6,7 @@ import (
 	"math/big"
 )
 
+// Fibonacci вычисляет n-ное число в последовательности Фибоначчи
 func Fibonacci(n int) (*big.Int, error) {
 	if n < 0 {
 		return nil, fmt.Errorf("нельзя вычислить число Фибоначчи для отрицательного числа")
