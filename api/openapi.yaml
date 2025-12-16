@@ -1,0 +1,32 @@
+щopenapi: "3.0.0"
+info:
+  title: "proGO API"
+  version: "1.0.0"
+servers:
+  - url: "http://localhost:8080"
+paths:
+  /fib:
+    get:
+      summary: "Вычисление числа Фибоначчи"
+      description: "Принимает параметр n и возвращает n-ое число Фибоначчи"
+      parameters:
+      - name: n
+        in: query
+        required: true
+        schema:
+          type: integer
+          minimum: 0
+      responses:
+        "200":
+          description: "Успешное вычисление"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+                    example: 13
+        "400":
+          description: "Ошибка запроса"
+
