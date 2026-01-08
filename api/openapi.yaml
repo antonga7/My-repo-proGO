@@ -1,4 +1,4 @@
-щopenapi: "3.0.0"
+openapi: "3.0.0"
 info:
   title: "proGO API"
   version: "1.0.0"
@@ -29,4 +29,11 @@ paths:
                     example: 13
         "400":
           description: "Ошибка запроса"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
 

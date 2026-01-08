@@ -8,11 +8,17 @@ import (
 	"net/http"
 	"proGO/api"
 	"proGO/internal/handler"
+	"proGO/internal/storage/postgres"
 )
 
 func main() {
 	r := chi.NewRouter()
-	fibHandler := &handler.FibHandler{}
+	store, err := postgres.New("postgres://myuser:mypassword@localhost:5432/mydb")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fibHandler := handler.NewFibHandler(store)
 	api.HandlerFromMux(
 		api.NewStrictHandler(fibHandler, nil),
 		r,

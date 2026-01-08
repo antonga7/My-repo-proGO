@@ -218,12 +218,15 @@ func (response GetFib200JSONResponse) VisitGetFibResponse(w http.ResponseWriter)
 	return json.NewEncoder(w).Encode(response)
 }
 
-type GetFib400Response struct {
+type GetFib400JSONResponse struct {
+	Error *string `json:"error,omitempty"`
 }
 
-func (response GetFib400Response) VisitGetFibResponse(w http.ResponseWriter) error {
+func (response GetFib400JSONResponse) VisitGetFibResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(400)
-	return nil
+
+	return json.NewEncoder(w).Encode(response)
 }
 
 // StrictServerInterface represents all server handlers.
