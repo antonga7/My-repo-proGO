@@ -1,24 +1,29 @@
-// Запускает сервер с поддержкой базы данных
+// main package starts the proGO-Fibonacci server,
+// processes routes via chi and oapi-codegen.
 package main
 
 import (
+	"github.com/go-chi/chi/v5"
 	"log"
 	"net/http"
+	"proGO/api"
 	"proGO/internal/handler"
 	"proGO/internal/storage/postgres"
 )
 
 func main() {
-	connStr := "postgres://myuser:mypassword@localhost:5432/mydb?sslmode=disable"
-
-	store, err := postgres.New(connStr)
+	r := chi.NewRouter()
+	store, err := postgres.New("postgres://myuser:mypassword@localhost:5432/mydb")
 	if err != nil {
-		log.Fatalf("Ошибка подключения к базе: %v", err)
+		log.Fatal(err)
 	}
 
-	h := handler.NewHandler(store)
+	fibHandler := handler.NewFibHandler(store)
+	api.HandlerFromMux(
+		api.NewStrictHandler(fibHandler, nil),
+		r,
+	)
 
-	http.HandleFunc("/fib", h.FibHandler)
-	log.Println("Сервер запущен на хосте 8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Println("Server started on :8080")
+	log.Fatal(http.ListenAndServe(":8080", r))
 }
