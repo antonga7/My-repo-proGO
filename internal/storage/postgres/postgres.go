@@ -48,3 +48,7 @@ func (s *Store) Set(ctx context.Context, n int, val *big.Int) error {
 	}
 	return nil
 }
+
+func (s *Store) Pool() *pgxpool.Pool {
+	return s.pool
+}
