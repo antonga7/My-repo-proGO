@@ -36,7 +36,10 @@ func (s *Store) Get(ctx context.Context, n int) (*big.Int, error) {
 	}
 
 	val := new(big.Int)
-	val.SetString(valStr, 10)
+	if _, ok := val.SetString(valStr, 10); !ok {
+		return nil, fmt.Errorf("неправильное bigint в БД")
+	}
+
 	return val, nil
 }
 
@@ -47,4 +50,8 @@ func (s *Store) Set(ctx context.Context, n int, val *big.Int) error {
 		return fmt.Errorf("ошибка при сохранении: %w", err)
 	}
 	return nil
+}
+
+func (s *Store) Pool() *pgxpool.Pool {
+	return s.pool
 }
