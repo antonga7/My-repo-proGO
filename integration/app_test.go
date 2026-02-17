@@ -3,7 +3,7 @@ package integration_test
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"errors"
 	"github.com/go-chi/chi/v5"
 	tcpostgres "github.com/testcontainers/testcontainers-go/modules/postgres"
 	"net"
@@ -11,9 +11,9 @@ import (
 	"proGO/api"
 	"proGO/internal/handler"
 	dbpostgres "proGO/internal/storage/postgres"
-	"time"
-
+	"sync"
 	"testing"
+	"time"
 )
 
 func TestFibAPI(t *testing.T) {
@@ -76,31 +76,26 @@ func TestFibAPI(t *testing.T) {
 		Addr:    ":8081",
 		Handler: r,
 	}
+
+	var mu sync.Mutex
+	mu.Lock()
+
 	go func() {
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		listener, err := net.Listen("tcp", addr)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		mu.Unlock()
+
+		if err := server.Serve(listener); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			t.Fatal(err)
 		}
 	}()
+
 	defer server.Close()
 
-	// 6. Ждем пока сервер начнет слушать порт
-	waitForPort := func(address string, timeout time.Duration) error {
-		deadline := time.Now().Add(timeout)
-		for time.Now().Before(deadline) {
-			conn, err := net.DialTimeout("tcp", address, 200*time.Millisecond)
-			if err == nil {
-				conn.Close()
-				return nil
-			}
-			time.Sleep(100 * time.Millisecond)
-		}
-		return fmt.Errorf("Порт %s не открылся за %s", address, timeout)
-	}
-	if err := waitForPort(addr, 5*time.Second); err != nil {
-		t.Fatal(err)
-	}
-
-	// 7. HTTP запрос
+	// 6. HTTP запрос
 	resp, err := http.Get("http://" + addr + "/fib?n=10")
 	if err != nil {
 		t.Fatal(err)

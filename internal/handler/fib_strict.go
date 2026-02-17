@@ -36,10 +36,13 @@ func (h *FibHandler) GetFib(ctx context.Context, request api.GetFibRequestObject
 
 	result, err := fib.Fibonacci(n)
 	if err != nil {
-		return api.GetFib400JSONResponse{}, nil
+		msg := err.Error()
+		return api.GetFib400JSONResponse{Error: &msg}, nil
 	}
 
-	_ = h.store.Set(ctx, n, result)
+	if err := h.store.Set(ctx, n, result); err != nil {
+		return nil, err
+	}
 
 	s := result.String()
 	return api.GetFib200JSONResponse{

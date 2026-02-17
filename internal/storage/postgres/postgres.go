@@ -36,7 +36,10 @@ func (s *Store) Get(ctx context.Context, n int) (*big.Int, error) {
 	}
 
 	val := new(big.Int)
-	val.SetString(valStr, 10)
+	if _, ok := val.SetString(valStr, 10); !ok {
+		return nil, fmt.Errorf("неправильное bigint в БД")
+	}
+
 	return val, nil
 }
 
